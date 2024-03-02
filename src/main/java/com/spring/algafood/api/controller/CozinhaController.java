@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.spring.algafood.domain.exception.EntidadeEmUsoException;
@@ -50,6 +51,7 @@ public class CozinhaController {
 	}
 	
 	@PostMapping
+	@ResponseStatus(HttpStatus.CREATED)
 	public Cozinha adicionar(@RequestBody Cozinha cozinha) {
 		return cadastroCozinha.salvar(cozinha);
 	}
@@ -59,18 +61,16 @@ public class CozinhaController {
 		Optional<Cozinha>  cozinhaAtual = cozinhaRepository.findById(cozinhaId);
 	
 		if (cozinhaAtual != null){
-		
-		//	cozinhaAtual.setNome(cozinha.getNome()); 
-			BeanUtils.copyProperties(cozinha, cozinhaAtual, "id");// O que quiser iguinorar coloca entre aspas
-			cadastroCozinha.salvar(cozinha);
-			return ResponseEntity.ok(cozinhaAtual.get());
+			BeanUtils.copyProperties(cozinha, cozinhaAtual, "id");
+			Cozinha cozinhaSalva = cadastroCozinha.salvar(cozinhaAtual.get());
+			return ResponseEntity.ok(cozinhaSalva);
 		}
 	
 		return ResponseEntity.notFound().build();
 	}
 	
 	@DeleteMapping("/{cozinhaId}")
-	public ResponseEntity<Cozinha> remover(@PathVariable Long cozinhaId) {
+	public ResponseEntity<?> remover(@PathVariable Long cozinhaId) {
 		try {
 			cadastroCozinha.excluir(cozinhaId);
 			return ResponseEntity.noContent().build();
@@ -79,7 +79,7 @@ public class CozinhaController {
 			return ResponseEntity.notFound().build();
 			
 		}catch(EntidadeEmUsoException e){
-			return ResponseEntity.status(HttpStatus.CONFLICT).build();
+			return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
 		}
 	}
 }

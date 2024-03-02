@@ -17,13 +17,13 @@ public class Cidade {
 	
 	@EqualsAndHashCode.Include
 	@Id
-	@GeneratedValue(strategy = GenerationType.IDENTITY) //Gerador de id por banco
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 
 	@Column(nullable = false)
 	private String nome;
 	
 	@ManyToOne
-	@JoinColumn(name = "estado_id", nullable = false) // Nomear coluna extrangeira
+	@JoinColumn(name = "estado_id", nullable = false)
 	private Estado estado;
 }

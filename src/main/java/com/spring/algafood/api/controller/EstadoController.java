@@ -59,7 +59,7 @@ public class EstadoController {
 		if (estadoAtual != null){
 		
 			BeanUtils.copyProperties(estado, estadoAtual, "id");
-			cadastroEstado.salvar(estadoAtual);
+			estadoAtual = cadastroEstado.salvar(estadoAtual);
 			return ResponseEntity.ok(estadoAtual);
 		}
 	
@@ -67,7 +67,7 @@ public class EstadoController {
 	}
 	
 	@DeleteMapping("/{estadoId}")
-	public ResponseEntity<Estado> remover(@PathVariable Long estadoId) {
+	public ResponseEntity<?> remover(@PathVariable Long estadoId) {
 		try {
 			cadastroEstado.excluir(estadoId);
 			return ResponseEntity.noContent().build();
@@ -76,7 +76,7 @@ public class EstadoController {
 			return ResponseEntity.notFound().build();
 			
 		}catch(EntidadeEmUsoException e){
-			return ResponseEntity.status(HttpStatus.CONFLICT).build();
+			return ResponseEntity.status(HttpStatus.CONFLICT).body(e.getMessage());
 		}
 	}
 	

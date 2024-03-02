@@ -51,7 +51,7 @@ public class CidadeController {
 	
 	@PostMapping
 	@ResponseStatus(HttpStatus.CREATED)
-	public ResponseEntity<?> adicionar(@RequestBody Cidade cidade){  // o "?" permite retorno de qualquer tipo
+	public ResponseEntity<?> adicionar(@RequestBody Cidade cidade){
 		try {
 			cidade = cadastroCidade.salvar(cidade);
 			

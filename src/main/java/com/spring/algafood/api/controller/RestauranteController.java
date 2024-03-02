@@ -1,6 +1,7 @@
 package com.spring.algafood.api.controller;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -34,15 +35,15 @@ public class RestauranteController {
 	
 	@GetMapping
 	public List<Restaurante> listar(){
-		return restauranteRepository.listar();
+		return restauranteRepository.findAll();
 	}
 	
 	@GetMapping("/{restauranteId}")
 	public ResponseEntity<Restaurante> buscar(@PathVariable Long restauranteId) {
-		Restaurante restaurante = restauranteRepository.buscar(restauranteId);
+		Optional<Restaurante> restaurante = restauranteRepository.findById(restauranteId);
 		
 		if (restaurante != null){
-			return ResponseEntity.ok(restaurante);
+			return ResponseEntity.ok(restaurante.get());
 		}
 		
 		return ResponseEntity.notFound().build();
@@ -50,7 +51,7 @@ public class RestauranteController {
 	
 	@PostMapping
 	@ResponseStatus(HttpStatus.CREATED)
-	public ResponseEntity<?> adicionar(@RequestBody Restaurante restaurante){  // o "?" permite retorno de qualquer tipo
+	public ResponseEntity<?> adicionar(@RequestBody Restaurante restaurante){
 		try {
 			restaurante = cadastroRestaurante.salvar(restaurante);
 			
@@ -63,12 +64,11 @@ public class RestauranteController {
 	
 	@PutMapping("/{restauranteId}")
 	public ResponseEntity<?> atualizar(@PathVariable Long restauranteId, @RequestBody Restaurante restaurante) {
-		Restaurante restauranteAtual = restauranteRepository.buscar(restauranteId);
+		Restaurante restauranteAtual = restauranteRepository.findById(restauranteId).orElse(null);
 		try {
 			if (restaurante != null){
 			
-			//	cozinhaAtual.setNome(cozinha.getNome()); 
-				BeanUtils.copyProperties(restaurante, restauranteAtual, "id");// O que quiser iguinorar coloca entre aspas
+				BeanUtils.copyProperties(restaurante, restauranteAtual, "id");
 				cadastroRestaurante.salvar(restauranteAtual);
 				return ResponseEntity.ok(restauranteAtual);
 			}

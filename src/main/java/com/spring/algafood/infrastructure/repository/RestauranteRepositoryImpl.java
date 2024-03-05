@@ -1,18 +1,25 @@
 package com.spring.algafood.infrastructure.repository;
 
+import static com.spring.algafood.infrastructure.repository.spec.RestauranteSpecs.comFreteGratis;
+import static com.spring.algafood.infrastructure.repository.spec.RestauranteSpecs.comNomeSemelhante;
+
 import java.math.BigDecimal;
-import java.util.HashMap;
+import java.util.ArrayList;
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Repository;
 import org.springframework.util.StringUtils;
 
 import com.spring.algafood.domain.model.Restaurante;
+import com.spring.algafood.domain.repository.RestauranteRepository;
 import com.spring.algafood.domain.repository.RestauranteRepositoryQueries;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
-import jakarta.persistence.TypedQuery;
+import jakarta.persistence.criteria.Predicate;
+
 
 @Repository
 public class RestauranteRepositoryImpl implements RestauranteRepositoryQueries {
@@ -20,35 +27,40 @@ public class RestauranteRepositoryImpl implements RestauranteRepositoryQueries {
 	@PersistenceContext
 	private EntityManager manager;
 	
+	@Autowired @Lazy
+	private RestauranteRepository restauranteRepository;
+	
 	@Override
 	public List<Restaurante> find(String nome, 
 			BigDecimal taxaFreteInicial, BigDecimal taxaFreteFinal) {
+		var builder = manager.getCriteriaBuilder();
 		
-		var jpql = new StringBuilder();
-		jpql.append("from Restaurante where 0 = 0 ");
+		var criteria = builder.createQuery(Restaurante.class);
+		var root = criteria.from(Restaurante.class);
+
+		var predicates = new ArrayList<Predicate>();
 		
-		var parametros = new HashMap<String, Object>();
-		
-		if (StringUtils.hasLength(nome)) {
-			jpql.append("and nome like :nome ");
-			parametros.put("nome", "%" + nome + "%");
+		if (StringUtils.hasText(nome)) {
+			predicates.add(builder.like(root.get("nome"), "%" + nome + "%"));
 		}
 		
 		if (taxaFreteInicial != null) {
-			jpql.append("and taxaFrete >= :taxaInicial ");
-			parametros.put("taxaInicial", taxaFreteInicial);
+			predicates.add(builder.greaterThanOrEqualTo(root.get("taxaFrete"), taxaFreteInicial));
 		}
 		
 		if (taxaFreteFinal != null) {
-			jpql.append("and taxaFrete <= :taxaFinal ");
-			parametros.put("taxaFinal", taxaFreteFinal);
+			predicates.add(builder.lessThanOrEqualTo(root.get("taxaFrete"), taxaFreteFinal));
 		}
 		
-		TypedQuery<Restaurante> query = manager
-				.createQuery(jpql.toString(), Restaurante.class);
+		criteria.where(predicates.toArray(new Predicate[0]));
 		
-		parametros.forEach((chave, valor) -> query.setParameter(chave, valor));
-
+		var query = manager.createQuery(criteria);
 		return query.getResultList();
 	}
+
+	@Override
+	public List<Restaurante> findComFreteGratis(String nome) {
+		return restauranteRepository.findAll(comFreteGratis().and(comNomeSemelhante(nome)));
+	}
+	
 }
